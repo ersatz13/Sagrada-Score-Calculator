@@ -4,4 +4,4 @@ this is just a score calculator for the popular boardgame Sagrada, source and AP
 
 Cheers
 
-EDIT: Sorry folks, the anroid app has been pulled down is it was auto-crashing on load
+EDIT: Sorry folks, the android app has been pulled down is it was auto-crashing on load
