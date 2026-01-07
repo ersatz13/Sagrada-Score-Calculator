@@ -184,8 +184,9 @@ body {
 
 .sg-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(56px, 1fr));
     gap: 0.75rem;
+    min-width: 320px;
 }
 
 .sg-cell {
@@ -276,19 +277,27 @@ body {
     color: var(--sg-ink);
 }
 
-@media (max-width: 900px) {
-    .sg-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
 @media (max-width: 600px) {
     .sg-hero {
         padding: 1.5rem;
     }
 
+    .sg-card {
+        padding: 1rem;
+    }
+
     .sg-grid {
-        grid-template-columns: repeat(1, minmax(0, 1fr));
+        gap: 0.5rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+
+    .sg-cell {
+        padding: 0.5rem;
+    }
+
+    .sg-cell label {
+        font-size: 0.6rem;
     }
 
     .sg-total {
