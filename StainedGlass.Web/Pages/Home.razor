@@ -1,0 +1,241 @@
+@page "/"
+@using StainedGlass.Core
+
+<PageTitle>StainedGlass</PageTitle>
+
+<div class="sg-page">
+    <header class="sg-hero">
+        <div>
+            <p class="sg-eyebrow">StainedGlass helper coded by Jdog</p>
+            <h1>Sagrada Score Companion</h1>
+            <p class="sg-lead">Track your dice grid and objectives with a clean, single-player scorer.</p>
+        </div>
+    </header>
+
+    <section class="sg-card">
+        <div class="sg-card-header">
+            <h2>Dice Grid</h2>
+            <p>Select a value and color for each die. Leave blank for empty spaces.</p>
+        </div>
+        <div class="sg-grid">
+            @for (var i = 0; i < Cells.Count; i++)
+            {
+                var cell = Cells[i];
+                <div class="sg-cell">
+                    <label>Value</label>
+                    <select class="sg-select" @bind="cell.Value">
+                        @foreach (var option in ValueOptions)
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    </select>
+                    <label>Color</label>
+                    <select class="sg-select" @bind="cell.Color">
+                        @foreach (var option in ColorOptions)
+                        {
+                            <option value="@option">@option</option>
+                        }
+                    </select>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="sg-card">
+        <div class="sg-card-header">
+            <h2>Objectives</h2>
+            <p>Pick three public objectives and your private objective.</p>
+        </div>
+        <div class="sg-form">
+            <div class="sg-field">
+                <label>Public Objective 1</label>
+                <select class="sg-select" @bind="PublicObjective1">
+                    @foreach (var option in PublicObjectiveOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+            </div>
+            <div class="sg-field">
+                <label>Public Objective 2</label>
+                <select class="sg-select" @bind="PublicObjective2">
+                    @foreach (var option in PublicObjectiveOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+            </div>
+            <div class="sg-field">
+                <label>Public Objective 3</label>
+                <select class="sg-select" @bind="PublicObjective3">
+                    @foreach (var option in PublicObjectiveOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+            </div>
+            <div class="sg-field">
+                <label>Private Objective</label>
+                <select class="sg-select" @bind="PrivateObjective">
+                    @foreach (var option in PrivateObjectiveOptions)
+                    {
+                        <option value="@option">@option</option>
+                    }
+                </select>
+            </div>
+            <div class="sg-field">
+                <label>Favor Tokens Remaining</label>
+                <input class="sg-input" type="number" min="0" max="99" @bind="FavorTokens" />
+            </div>
+        </div>
+        <button class="sg-button" @onclick="CalculateScore">Calculate Score</button>
+    </section>
+
+    <section class="sg-card sg-summary">
+        <div>
+            <h2>Score Summary</h2>
+            <p class="sg-summary-line">@PublicScoreText</p>
+            <p class="sg-summary-line">@PrivateScoreText</p>
+            <p class="sg-summary-line">@FavorTokenScoreText</p>
+            <p class="sg-summary-line">@EmptySpacePenaltyText</p>
+        </div>
+        <div class="sg-total">
+            <span>Total</span>
+            <strong>@TotalScoreText</strong>
+        </div>
+    </section>
+</div>
+
+@code {
+    private readonly List<CellModel> Cells = new();
+    private readonly List<string> ColorOptions = new()
+    {
+        ScoringEngine.ObjectiveBlank,
+        "Red",
+        "Yellow",
+        "Green",
+        "Blue",
+        "Purple"
+    };
+
+    private readonly List<string> ValueOptions = new()
+    {
+        ScoringEngine.ObjectiveBlank,
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+    };
+
+    private readonly List<string> PublicObjectiveOptions = new()
+    {
+        ScoringEngine.ObjectiveBlank,
+        ScoringEngine.ObjectiveShadeVariety,
+        ScoringEngine.ObjectiveRowColorVariety,
+        ScoringEngine.ObjectiveColorVariety,
+        ScoringEngine.ObjectiveColumnShadeVariety,
+        ScoringEngine.ObjectiveColorDiagonals,
+        ScoringEngine.ObjectiveLightShade,
+        ScoringEngine.ObjectiveMediumShade,
+        ScoringEngine.ObjectiveRowShadeVariety,
+        ScoringEngine.ObjectiveDeepShades
+    };
+
+    private readonly List<string> PrivateObjectiveOptions = new()
+    {
+        ScoringEngine.ObjectiveBlank,
+        ScoringEngine.PrivateShadesBlue,
+        ScoringEngine.PrivateShadesRed,
+        ScoringEngine.PrivateShadesGreen,
+        ScoringEngine.PrivateShadesYellow,
+        ScoringEngine.PrivateShadesPurple
+    };
+
+    private string? PublicObjective1;
+    private string? PublicObjective2;
+    private string? PublicObjective3;
+    private string? PrivateObjective;
+    private string? FavorTokens;
+
+    private string PublicScoreText = "Public objectives: 0";
+    private string PrivateScoreText = "Private objective: 0";
+    private string FavorTokenScoreText = "Favor tokens: 0";
+    private string EmptySpacePenaltyText = "Empty spaces: 0";
+    private string TotalScoreText = "0";
+
+    protected override void OnInitialized()
+    {
+        for (var i = 0; i < 25; i++)
+        {
+            Cells.Add(new CellModel());
+        }
+    }
+
+    private void CalculateScore()
+    {
+        var grid = BuildGrid();
+        var publicScore = ScoringEngine.CalculatePublicObjectives(PublicObjective1, PublicObjective2, PublicObjective3, grid);
+        var privateScore = ScoringEngine.CalculatePrivateObjective(PrivateObjective, grid);
+        var favorScore = ScoringEngine.ParseFavorTokens(FavorTokens);
+        var emptyPenalty = ScoringEngine.CountEmptySpaces(grid);
+        var totalScore = publicScore + privateScore + favorScore - emptyPenalty;
+
+        PublicScoreText = $"Public objectives: {publicScore}";
+        PrivateScoreText = $"Private objective: {privateScore}";
+        FavorTokenScoreText = $"Favor tokens: {favorScore}";
+        EmptySpacePenaltyText = $"Empty spaces: -{emptyPenalty}";
+        TotalScoreText = totalScore.ToString();
+    }
+
+    private DieCell?[,] BuildGrid()
+    {
+        var grid = new DieCell?[5, 5];
+
+        for (var index = 0; index < Cells.Count; index++)
+        {
+            var row = index / 5;
+            var col = index % 5;
+            var cell = Cells[index];
+
+            var value = ParseDieValue(cell.Value);
+            var color = NormalizeColor(cell.Color);
+
+            if (value is null && color is null)
+            {
+                grid[row, col] = null;
+                continue;
+            }
+
+            grid[row, col] = new DieCell(value, color);
+        }
+
+        return grid;
+    }
+
+    private static int? ParseDieValue(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value == ScoringEngine.ObjectiveBlank)
+            return null;
+
+        if (!int.TryParse(value, out var parsed))
+            return null;
+
+        return parsed is >= 1 and <= 6 ? parsed : null;
+    }
+
+    private static string? NormalizeColor(string? color)
+    {
+        if (string.IsNullOrWhiteSpace(color) || color == ScoringEngine.ObjectiveBlank)
+            return null;
+
+        return color;
+    }
+
+    private sealed class CellModel
+    {
+        public string? Value { get; set; } = ScoringEngine.ObjectiveBlank;
+        public string? Color { get; set; } = ScoringEngine.ObjectiveBlank;
+    }
+}

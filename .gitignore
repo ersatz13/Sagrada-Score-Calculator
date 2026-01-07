@@ -1,0 +1,21 @@
+# Build outputs
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# IDE folders
+.idea/
+*.iml
+.vs/
+
+# MAUI workload temp cache
+maui-temp/
+
+# OS files
+Thumbs.db
+Desktop.ini

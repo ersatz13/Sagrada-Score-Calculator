@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="StainedGlass.MainPage"
+             x:Name="PageRoot">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="SgInk">#1E2230</Color>
+            <Color x:Key="SgMuted">#4C5566</Color>
+            <Color x:Key="SgCard">#FFFFFF</Color>
+            <Color x:Key="SgStroke">#E2E6EE</Color>
+            <Color x:Key="SgField">#F6F7FB</Color>
+            <Color x:Key="SgAccent">#C24B3A</Color>
+
+            <LinearGradientBrush x:Key="PageBackground" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#F0F2F7" Offset="0.0" />
+                <GradientStop Color="#E7ECF6" Offset="0.6" />
+                <GradientStop Color="#F8F2E9" Offset="1.0" />
+            </LinearGradientBrush>
+
+            <Style TargetType="Border" x:Key="Card">
+                <Setter Property="BackgroundColor" Value="{StaticResource SgCard}" />
+                <Setter Property="Stroke" Value="{StaticResource SgStroke}" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="StrokeShape">
+                    <RoundRectangle CornerRadius="16" />
+                </Setter>
+                <Setter Property="Padding" Value="16" />
+                <Setter Property="Shadow">
+                    <Shadow Radius="12" Opacity="0.15" Offset="0,6" Brush="#000000" />
+                </Setter>
+            </Style>
+
+            <Style TargetType="Border" x:Key="FieldContainer">
+                <Setter Property="BackgroundColor" Value="{StaticResource SgField}" />
+                <Setter Property="Stroke" Value="{StaticResource SgStroke}" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="StrokeShape">
+                    <RoundRectangle CornerRadius="10" />
+                </Setter>
+                <Setter Property="Padding" Value="10,6" />
+            </Style>
+
+            <Style TargetType="Label" x:Key="TitleText">
+                <Setter Property="TextColor" Value="{StaticResource SgInk}" />
+                <Setter Property="FontFamily" Value="OpenSansSemibold" />
+                <Setter Property="FontSize" Value="26" />
+                <Setter Property="HorizontalTextAlignment" Value="Center" />
+            </Style>
+
+            <Style TargetType="Label" x:Key="SubtitleText">
+                <Setter Property="TextColor" Value="{StaticResource SgMuted}" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="HorizontalTextAlignment" Value="Center" />
+            </Style>
+
+            <Style TargetType="Label" x:Key="SectionHeader">
+                <Setter Property="TextColor" Value="{StaticResource SgInk}" />
+                <Setter Property="FontFamily" Value="OpenSansSemibold" />
+                <Setter Property="FontSize" Value="18" />
+            </Style>
+
+            <Style TargetType="Button" x:Key="PrimaryButton">
+                <Setter Property="BackgroundColor" Value="{StaticResource SgAccent}" />
+                <Setter Property="TextColor" Value="White" />
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="FontFamily" Value="OpenSansSemibold" />
+                <Setter Property="FontSize" Value="15" />
+                <Setter Property="Padding" Value="14,12" />
+            </Style>
+
+            <Style TargetType="Picker" x:Key="CompactPicker">
+                <Setter Property="TextColor" Value="{StaticResource SgInk}" />
+                <Setter Property="TitleColor" Value="{StaticResource SgMuted}" />
+                <Setter Property="FontSize" Value="14" />
+            </Style>
+
+            <Style TargetType="Entry" x:Key="CompactEntry">
+                <Setter Property="TextColor" Value="{StaticResource SgInk}" />
+                <Setter Property="FontSize" Value="14" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid>
+        <Grid.Background>
+            <StaticResource Key="PageBackground" />
+        </Grid.Background>
+
+        <ScrollView>
+            <VerticalStackLayout Padding="20,28" Spacing="18">
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="6">
+                        <Label
+                            Text="StainedGlass helper coded by Jdog"
+                            Style="{StaticResource TitleText}"
+                            SemanticProperties.HeadingLevel="Level1" />
+                        <Label
+                            Text="Track your Sagrada score with clean, quick inputs."
+                            Style="{StaticResource SubtitleText}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Dice Grid" Style="{StaticResource SectionHeader}" />
+                        <Label
+                            Text="Select a value and color for each die. Leave blank for empty spaces."
+                            Style="{StaticResource SubtitleText}"
+                            HorizontalTextAlignment="Start" />
+
+                        <CollectionView
+                            ItemsSource="{Binding Cells}"
+                            SelectionMode="None">
+                            <CollectionView.ItemsLayout>
+                                <GridItemsLayout Orientation="Vertical" Span="5" />
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border
+                                        BackgroundColor="{StaticResource SgField}"
+                                        Stroke="{StaticResource SgStroke}"
+                                        StrokeThickness="1"
+                                        Margin="2"
+                                        Padding="6">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="10" />
+                                        </Border.StrokeShape>
+                                        <VerticalStackLayout Spacing="6">
+                                            <Picker
+                                                Title="Value"
+                                                Style="{StaticResource CompactPicker}"
+                                                ItemsSource="{Binding Source={x:Reference PageRoot}, Path=ValueOptions}"
+                                                SelectedItem="{Binding Value, Mode=TwoWay}" />
+                                            <Picker
+                                                Title="Color"
+                                                Style="{StaticResource CompactPicker}"
+                                                ItemsSource="{Binding Source={x:Reference PageRoot}, Path=ColorOptions}"
+                                                SelectedItem="{Binding Color, Mode=TwoWay}" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Objectives" Style="{StaticResource SectionHeader}" />
+
+                        <Label Text="Public Objectives" Style="{StaticResource SubtitleText}" HorizontalTextAlignment="Start" />
+                        <Border Style="{StaticResource FieldContainer}">
+                            <Picker
+                                Title="Public Objective 1"
+                                Style="{StaticResource CompactPicker}"
+                                ItemsSource="{Binding PublicObjectiveOptions}"
+                                SelectedItem="{Binding PublicObjective1, Mode=TwoWay}" />
+                        </Border>
+                        <Border Style="{StaticResource FieldContainer}">
+                            <Picker
+                                Title="Public Objective 2"
+                                Style="{StaticResource CompactPicker}"
+                                ItemsSource="{Binding PublicObjectiveOptions}"
+                                SelectedItem="{Binding PublicObjective2, Mode=TwoWay}" />
+                        </Border>
+                        <Border Style="{StaticResource FieldContainer}">
+                            <Picker
+                                Title="Public Objective 3"
+                                Style="{StaticResource CompactPicker}"
+                                ItemsSource="{Binding PublicObjectiveOptions}"
+                                SelectedItem="{Binding PublicObjective3, Mode=TwoWay}" />
+                        </Border>
+
+                        <Label Text="Private Objective" Style="{StaticResource SubtitleText}" HorizontalTextAlignment="Start" />
+                        <Border Style="{StaticResource FieldContainer}">
+                            <Picker
+                                Title="Private Objective"
+                                Style="{StaticResource CompactPicker}"
+                                ItemsSource="{Binding PrivateObjectiveOptions}"
+                                SelectedItem="{Binding PrivateObjective, Mode=TwoWay}" />
+                        </Border>
+
+                        <Label Text="Favor Tokens Remaining" Style="{StaticResource SubtitleText}" HorizontalTextAlignment="Start" />
+                        <Border Style="{StaticResource FieldContainer}">
+                            <Entry
+                                Placeholder="0"
+                                Keyboard="Numeric"
+                                MaxLength="2"
+                                HorizontalTextAlignment="Center"
+                                Style="{StaticResource CompactEntry}"
+                                Text="{Binding FavorTokens, Mode=TwoWay}" />
+                        </Border>
+
+                        <Button
+                            Text="Calculate Score"
+                            Style="{StaticResource PrimaryButton}"
+                            Clicked="OnCalculateClicked" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Score Summary" Style="{StaticResource SectionHeader}" />
+                        <Label Text="{Binding PublicScoreText}" Style="{StaticResource SubtitleText}" HorizontalTextAlignment="Start" />
+                        <Label Text="{Binding PrivateScoreText}" Style="{StaticResource SubtitleText}" HorizontalTextAlignment="Start" />
+                        <Label Text="{Binding FavorTokenScoreText}" Style="{StaticResource SubtitleText}" HorizontalTextAlignment="Start" />
+                        <Label Text="{Binding EmptySpacePenaltyText}" Style="{StaticResource SubtitleText}" HorizontalTextAlignment="Start" />
+                        <Label Text="{Binding TotalScoreText}" Style="{StaticResource SectionHeader}" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>
