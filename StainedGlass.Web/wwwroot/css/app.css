@@ -138,6 +138,10 @@ body {
     gap: 1.5rem;
 }
 
+.sg-app {
+    min-height: 100vh;
+}
+
 .sg-hero {
     background: linear-gradient(120deg, #ffffff, #f5efe3);
     border: 1px solid var(--sg-stroke);
@@ -184,9 +188,14 @@ body {
 
 .sg-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(56px, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0.75rem;
-    min-width: 320px;
+    min-width: 420px;
+}
+
+.sg-grid-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .sg-cell {
@@ -202,7 +211,12 @@ body {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.1rem;
-    color: var(--sg-muted);
+    color: rgba(30, 34, 48, 0.75);
+}
+
+.sg-cell .sg-select,
+.sg-cell .sg-input {
+    background: rgba(255, 255, 255, 0.9);
 }
 
 .sg-form {
@@ -225,6 +239,19 @@ body {
     background: var(--sg-field);
     color: var(--sg-ink);
     font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    min-height: 38px;
+}
+
+.sg-select {
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--sg-muted) 50%),
+        linear-gradient(135deg, var(--sg-muted) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 2rem;
 }
 
 .sg-button {
@@ -287,8 +314,9 @@ body {
     }
 
     .sg-grid {
+        grid-template-columns: repeat(5, 64px);
+        width: max-content;
         gap: 0.5rem;
-        overflow-x: auto;
         padding-bottom: 0.5rem;
     }
 

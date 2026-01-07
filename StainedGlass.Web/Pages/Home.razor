@@ -17,27 +17,29 @@
             <h2>Dice Grid</h2>
             <p>Select a value and color for each die. Leave blank for empty spaces.</p>
         </div>
-        <div class="sg-grid">
-            @for (var i = 0; i < Cells.Count; i++)
-            {
-                var cell = Cells[i];
-                <div class="sg-cell">
-                    <label>Value</label>
-                    <select class="sg-select" @bind="cell.Value">
-                        @foreach (var option in ValueOptions)
-                        {
-                            <option value="@option">@option</option>
-                        }
-                    </select>
-                    <label>Color</label>
-                    <select class="sg-select" @bind="cell.Color">
-                        @foreach (var option in ColorOptions)
-                        {
-                            <option value="@option">@option</option>
-                        }
-                    </select>
-                </div>
-            }
+        <div class="sg-grid-wrap">
+            <div class="sg-grid">
+                @for (var i = 0; i < Cells.Count; i++)
+                {
+                    var cell = Cells[i];
+                    <div class="sg-cell" style="@GetCellStyle(cell.Color)">
+                        <label>Value</label>
+                        <select class="sg-select" @bind="cell.Value">
+                            @foreach (var option in ValueOptions)
+                            {
+                                <option value="@option">@option</option>
+                            }
+                        </select>
+                        <label>Color</label>
+                        <select class="sg-select" @bind="cell.Color">
+                            @foreach (var option in ColorOptions)
+                            {
+                                <option value="@option">@option</option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
         </div>
     </section>
 
@@ -231,6 +233,24 @@
             return null;
 
         return color;
+    }
+
+    private static string GetCellStyle(string? color)
+    {
+        if (string.IsNullOrWhiteSpace(color) || color == ScoringEngine.ObjectiveBlank)
+            return string.Empty;
+
+        var hex = color switch
+        {
+            "Red" => "#E04A3F",
+            "Yellow" => "#F2C94C",
+            "Green" => "#5FB36A",
+            "Blue" => "#4C8FDE",
+            "Purple" => "#8C6BCF",
+            _ => "#F5F7FB"
+        };
+
+        return $"background-color: {hex};";
     }
 
     private sealed class CellModel
