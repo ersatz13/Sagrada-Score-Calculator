@@ -8,7 +8,7 @@
         <div>
             <p class="sg-eyebrow">StainedGlass helper coded by Jdog</p>
             <h1>Sagrada Score Companion</h1>
-            <p class="sg-lead">Track your dice grid and objectives with a clean, single-player scorer.</p>
+            <p class="sg-lead">Score one window using original base-game multiplayer rules. Solo and expansion scoring are not included.</p>
         </div>
     </header>
 
@@ -16,6 +16,7 @@
         <div class="sg-card-header">
             <h2>Dice Grid</h2>
             <p>Select a value and color for each die. Leave blank for empty spaces.</p>
+            <p class="sg-disclaimer">If number and colors are not visible please rotate your phone horizontal.</p>
         </div>
         <div class="sg-grid-wrap">
             <div class="sg-grid">
@@ -90,6 +91,10 @@
                 <input class="sg-input" type="number" min="0" max="99" @bind="FavorTokens" />
             </div>
         </div>
+        @if (ValidationError is not null)
+        {
+            <p role="alert">@ValidationError</p>
+        }
         <button class="sg-button" @onclick="CalculateScore">Calculate Score</button>
     </section>
 
@@ -137,6 +142,7 @@
         ScoringEngine.ObjectiveShadeVariety,
         ScoringEngine.ObjectiveRowColorVariety,
         ScoringEngine.ObjectiveColorVariety,
+        ScoringEngine.ObjectiveColumnColorVariety,
         ScoringEngine.ObjectiveColumnShadeVariety,
         ScoringEngine.ObjectiveColorDiagonals,
         ScoringEngine.ObjectiveLightShade,
@@ -160,6 +166,7 @@
     private string? PublicObjective3;
     private string? PrivateObjective;
     private string? FavorTokens;
+    private string? ValidationError;
 
     private string PublicScoreText = "Public objectives: 0";
     private string PrivateScoreText = "Private objective: 0";
@@ -169,7 +176,7 @@
 
     protected override void OnInitialized()
     {
-        for (var i = 0; i < 25; i++)
+        for (var i = 0; i < ScoringEngine.Rows * ScoringEngine.Columns; i++)
         {
             Cells.Add(new CellModel());
         }
@@ -178,6 +185,13 @@
     private void CalculateScore()
     {
         var grid = BuildGrid();
+        ValidationError = ScoringEngine.GetInputError(grid, PublicObjective1, PublicObjective2, PublicObjective3);
+        if (ValidationError is not null)
+        {
+            TotalScoreText = "�";
+            PublicScoreText = PrivateScoreText = FavorTokenScoreText = EmptySpacePenaltyText = "";
+            return;
+        }
         var publicScore = ScoringEngine.CalculatePublicObjectives(PublicObjective1, PublicObjective2, PublicObjective3, grid);
         var privateScore = ScoringEngine.CalculatePrivateObjective(PrivateObjective, grid);
         var favorScore = ScoringEngine.ParseFavorTokens(FavorTokens);
@@ -193,12 +207,12 @@
 
     private DieCell?[,] BuildGrid()
     {
-        var grid = new DieCell?[5, 5];
+        var grid = new DieCell?[ScoringEngine.Rows, ScoringEngine.Columns];
 
         for (var index = 0; index < Cells.Count; index++)
         {
-            var row = index / 5;
-            var col = index % 5;
+            var row = index / ScoringEngine.Columns;
+            var col = index % ScoringEngine.Columns;
             var cell = Cells[index];
 
             var value = ParseDieValue(cell.Value);

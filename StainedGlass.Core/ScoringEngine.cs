@@ -1,11 +1,16 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace StainedGlass.Core;
 
 public static class ScoringEngine
 {
+	public const int Rows = 4;
+	public const int Columns = 5;
 	public const string ObjectiveBlank = "Blank";
 	public const string ObjectiveShadeVariety = "Shade Variety (sets of one of each value anywhere 5 points)";
 	public const string ObjectiveRowColorVariety = "Row Color Variety (rows with no repeated color 6 points)";
 	public const string ObjectiveColorVariety = "Color Variety (sets of one of each color anywhere 4 points)";
+	public const string ObjectiveColumnColorVariety = "Column Color Variety (columns with no repeated color 5 points)";
 	public const string ObjectiveColumnShadeVariety = "Column Shade Variety (columns with no repeated values 4 points)";
 	public const string ObjectiveColorDiagonals = "Color Diagonals (count of diagonally adjacent same color dice)";
 	public const string ObjectiveLightShade = "Light Shade (sets of 1 & 2 values anywhere each die only counts for 1 set, 2 points for each set)";
@@ -25,13 +30,13 @@ public static class ScoringEngine
 		string? objective3,
 		DieCell?[,] grid)
 	{
-		return ScorePublicObjective(objective1, grid)
-		       + ScorePublicObjective(objective2, grid)
-		       + ScorePublicObjective(objective3, grid);
+		ValidateGrid(grid);
+		return new[] { objective1, objective2, objective3 }.Distinct().Sum(objective => ScorePublicObjective(objective, grid));
 	}
 
 	public static int CalculatePrivateObjective(string? objective, DieCell?[,] grid)
 	{
+		ValidateGrid(grid);
 		if (string.IsNullOrWhiteSpace(objective) || objective == ObjectiveBlank)
 			return 0;
 
@@ -52,11 +57,11 @@ public static class ScoringEngine
 
 		foreach (var cell in grid)
 		{
-			if (cell is null || cell.Value is null || cell.Color is null)
+			if (!IsCompleteDie(cell))
 				continue;
 
 			if (string.Equals(cell.Color, targetColor, StringComparison.OrdinalIgnoreCase))
-				sum += cell.Value.Value;
+				sum += cell.Value!.Value;
 		}
 
 		return sum;
@@ -64,15 +69,39 @@ public static class ScoringEngine
 
 	public static int CountEmptySpaces(DieCell?[,] grid)
 	{
+		ValidateGrid(grid);
 		var empty = 0;
 
 		foreach (var cell in grid)
 		{
-			if (cell is null || cell.Value is null || cell.Color is null)
+			if (!IsCompleteDie(cell))
 				empty++;
 		}
 
 		return empty;
+	}
+
+	public static bool IsCompleteDie([NotNullWhen(true)] DieCell? cell) =>
+		cell?.Value is >= 1 and <= 6 &&
+		new[] { "Red", "Yellow", "Green", "Blue", "Purple" }.Contains(cell.Color, StringComparer.OrdinalIgnoreCase);
+
+	private static void ValidateGrid(DieCell?[,] grid)
+	{
+		ArgumentNullException.ThrowIfNull(grid);
+		if (grid.GetLength(0) != Rows || grid.GetLength(1) != Columns)
+			throw new ArgumentException("A Sagrada window must have 4 rows and 5 columns.", nameof(grid));
+	}
+
+	public static string? GetInputError(DieCell?[,] grid, params string?[] objectives)
+	{
+		ValidateGrid(grid);
+		foreach (var cell in grid)
+			if (cell is not null && !IsCompleteDie(cell))
+				return "Select both a value and a color for each die, or clear both for an empty space.";
+		var selected = objectives.Where(o => !string.IsNullOrWhiteSpace(o) && o != ObjectiveBlank).ToArray();
+		if (selected.Distinct().Count() != selected.Length)
+			return "Choose three different public objectives.";
+		return null;
 	}
 
 	public static int ParseFavorTokens(string? value)
@@ -96,6 +125,7 @@ public static class ScoringEngine
 			ObjectiveShadeVariety => ScoreShadeVariety(grid),
 			ObjectiveRowColorVariety => ScoreRowColorVariety(grid),
 			ObjectiveColorVariety => ScoreColorVariety(grid),
+			ObjectiveColumnColorVariety => ScoreColumnColorVariety(grid),
 			ObjectiveColumnShadeVariety => ScoreColumnShadeVariety(grid),
 			ObjectiveColorDiagonals => ScoreColorDiagonals(grid),
 			ObjectiveLightShade => ScoreShadePair(grid, 1, 2),
@@ -117,21 +147,21 @@ public static class ScoringEngine
 	{
 		var score = 0;
 
-		for (var row = 0; row < 5; row++)
+		for (var row = 0; row < Rows; row++)
 		{
 			var colors = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			var complete = true;
 
-			for (var col = 0; col < 5; col++)
+			for (var col = 0; col < Columns; col++)
 			{
 				var cell = grid[row, col];
-				if (cell?.Color is null)
+				if (!IsCompleteDie(cell))
 				{
 					complete = false;
 					break;
 				}
 
-				if (!colors.Add(cell.Color))
+				if (!colors.Add(cell.Color!))
 				{
 					complete = false;
 					break;
@@ -158,36 +188,54 @@ public static class ScoringEngine
 
 		foreach (var cell in grid)
 		{
-			if (cell?.Color is null)
+			if (!IsCompleteDie(cell))
 				continue;
 
-			if (colorCounts.ContainsKey(cell.Color))
-				colorCounts[cell.Color]++;
+			if (colorCounts.ContainsKey(cell.Color!))
+				colorCounts[cell.Color!]++;
 		}
 
 		var sets = colorCounts.Values.Min();
 		return sets * 4;
 	}
 
+	private static int ScoreColumnColorVariety(DieCell?[,] grid)
+	{
+		var score = 0;
+		for (var col = 0; col < Columns; col++)
+		{
+			var colors = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			for (var row = 0; row < Rows; row++)
+			{
+				var cell = grid[row, col];
+				if (!IsCompleteDie(cell) || !colors.Add(cell.Color!))
+					break;
+				if (row == Rows - 1)
+					score += 5;
+			}
+		}
+		return score;
+	}
+
 	private static int ScoreColumnShadeVariety(DieCell?[,] grid)
 	{
 		var score = 0;
 
-		for (var col = 0; col < 5; col++)
+		for (var col = 0; col < Columns; col++)
 		{
 			var values = new HashSet<int>();
 			var complete = true;
 
-			for (var row = 0; row < 5; row++)
+			for (var row = 0; row < Rows; row++)
 			{
 				var cell = grid[row, col];
-				if (cell?.Value is null)
+				if (!IsCompleteDie(cell))
 				{
 					complete = false;
 					break;
 				}
 
-				if (!values.Add(cell.Value.Value))
+				if (!values.Add(cell.Value!.Value))
 				{
 					complete = false;
 					break;
@@ -205,15 +253,15 @@ public static class ScoringEngine
 	{
 		var score = 0;
 
-		for (var row = 0; row < 5; row++)
+		for (var row = 0; row < Rows; row++)
 		{
-			for (var col = 0; col < 5; col++)
+			for (var col = 0; col < Columns; col++)
 			{
 				var cell = grid[row, col];
-				if (cell?.Color is null)
+				if (!IsCompleteDie(cell))
 					continue;
 
-				if (HasDiagonalMatch(grid, row, col, cell.Color))
+				if (HasDiagonalMatch(grid, row, col, cell.Color!))
 					score++;
 			}
 		}
@@ -230,11 +278,11 @@ public static class ScoringEngine
 				var newRow = row + rowOffset;
 				var newCol = col + colOffset;
 
-				if (newRow < 0 || newRow >= 5 || newCol < 0 || newCol >= 5)
+				if (newRow < 0 || newRow >= Rows || newCol < 0 || newCol >= Columns)
 					continue;
 
 				var neighbor = grid[newRow, newCol];
-				if (neighbor?.Color is not null && string.Equals(neighbor.Color, color, StringComparison.OrdinalIgnoreCase))
+				if (IsCompleteDie(neighbor) && string.Equals(neighbor.Color, color, StringComparison.OrdinalIgnoreCase))
 					return true;
 			}
 		}
@@ -253,21 +301,21 @@ public static class ScoringEngine
 	{
 		var score = 0;
 
-		for (var row = 0; row < 5; row++)
+		for (var row = 0; row < Rows; row++)
 		{
 			var values = new HashSet<int>();
 			var complete = true;
 
-			for (var col = 0; col < 5; col++)
+			for (var col = 0; col < Columns; col++)
 			{
 				var cell = grid[row, col];
-				if (cell?.Value is null)
+				if (!IsCompleteDie(cell))
 				{
 					complete = false;
 					break;
 				}
 
-				if (!values.Add(cell.Value.Value))
+				if (!values.Add(cell.Value!.Value))
 				{
 					complete = false;
 					break;
@@ -287,10 +335,10 @@ public static class ScoringEngine
 
 		foreach (var cell in grid)
 		{
-			if (cell?.Value is null)
+			if (!IsCompleteDie(cell))
 				continue;
 
-			var value = cell.Value.Value;
+			var value = cell.Value!.Value;
 			if (value is >= 1 and <= 6)
 				counts[value - 1]++;
 		}
